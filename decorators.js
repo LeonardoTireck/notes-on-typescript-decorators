@@ -1,3 +1,4 @@
+// CODE THAT INTERACTS WITH OTHER CODE -> METAPROGRAMMING
 // Decorators are functions you can attach to elements of OOP (classes, methods, properties...)
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
@@ -14,6 +15,13 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __runInitializers = (this && this.__runInitializers) || function (thisArg, initializers, value) {
+    var useValue = arguments.length > 2;
+    for (var i = 0; i < initializers.length; i++) {
+        value = useValue ? initializers[i].call(thisArg, value) : initializers[i].call(thisArg);
+    }
+    return useValue ? value : void 0;
+};
 var __esDecorate = (this && this.__esDecorate) || function (ctor, descriptorIn, decorators, contextIn, initializers, extraInitializers) {
     function accept(f) { if (f !== void 0 && typeof f !== "function") throw new TypeError("Function expected"); return f; }
     var kind = contextIn.kind, key = kind === "getter" ? "get" : kind === "setter" ? "set" : "value";
@@ -41,13 +49,6 @@ var __esDecorate = (this && this.__esDecorate) || function (ctor, descriptorIn, 
     if (target) Object.defineProperty(target, contextIn.name, descriptor);
     done = true;
 };
-var __runInitializers = (this && this.__runInitializers) || function (thisArg, initializers, value) {
-    var useValue = arguments.length > 2;
-    for (var i = 0; i < initializers.length; i++) {
-        value = useValue ? initializers[i].call(thisArg, value) : initializers[i].call(thisArg);
-    }
-    return useValue ? value : void 0;
-};
 var __setFunctionName = (this && this.__setFunctionName) || function (f, name, prefix) {
     if (typeof name === "symbol") name = name.description ? "[".concat(name.description, "]") : "";
     return Object.defineProperty(f, "name", { configurable: true, value: prefix ? "".concat(prefix, " ", name) : name });
@@ -55,7 +56,7 @@ var __setFunctionName = (this && this.__setFunctionName) || function (f, name, p
 function logger(target, context) {
     // It takes two arguments. The target of the decorator as the first, and the extra context of
     // the target.
-    console.log("Logger Decorator");
+    console.log("Class logger decorator");
     console.log(target);
     console.log(context);
     // We can also implement a return statement on the decorator, so that it
@@ -78,6 +79,13 @@ function logger(target, context) {
     // function. And we can do that by using generics and passing the target type
     // as a new class.
 }
+// Now let's try the same with a decorator for a method:
+// The goal is to create a decorator that will bind the context of the instance to the method.
+function autobind(_target, context) {
+    context.addInitializer(function () {
+        this[context.name] = this[context.name].bind(this);
+    });
+}
 //  To attach a decorator to a target, use the @ simbol without calling the function, There's a way to
 //  pass arguments to this decorator function that I will explore later.
 var Person = function () {
@@ -85,9 +93,11 @@ var Person = function () {
     var _classDescriptor;
     var _classExtraInitializers = [];
     var _classThis;
+    var _instanceExtraInitializers = [];
+    var _greet_decorators;
     var Person = _classThis = /** @class */ (function () {
         function Person_1() {
-            this.name = "Leo";
+            this.name = (__runInitializers(this, _instanceExtraInitializers), "Leo");
         }
         Person_1.prototype.greet = function () {
             console.log("Hi my name is ".concat(this.name));
@@ -97,6 +107,8 @@ var Person = function () {
     __setFunctionName(_classThis, "Person");
     (function () {
         var _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
+        _greet_decorators = [autobind];
+        __esDecorate(_classThis, null, _greet_decorators, { kind: "method", name: "greet", static: false, private: false, access: { has: function (obj) { return "greet" in obj; }, get: function (obj) { return obj.greet; } }, metadata: _metadata }, null, _instanceExtraInitializers);
         __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
         Person = _classThis = _classDescriptor.value;
         if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
@@ -106,4 +118,6 @@ var Person = function () {
 }();
 // now we can instantiate a new Person, and that object should have the property name.
 var leo = new Person();
+var leoSayingHi = leo.greet;
 var lara = new Person();
+leoSayingHi(); // This works because the context was successfully bound through the decorator.
