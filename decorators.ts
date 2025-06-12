@@ -1,3 +1,4 @@
+// CODE THAT INTERACTS WITH OTHER CODE -> METAPROGRAMMING
 // Decorators are functions you can attach to elements of OOP (classes, methods, properties...)
 
 function logger<T extends new (...args: any[]) => any>(
