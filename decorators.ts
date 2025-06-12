@@ -27,7 +27,7 @@ function logger<T extends new (...args: any[]) => any>(
 // Now let's try the same with a decorator for a method:
 // The goal is to create a decorator that will bind the context of the instance to the method.
 function autobind(
-  _target: (...args: any[]) => any,
+  target: (...args: any[]) => any,
   context: ClassMethodDecoratorContext,
 ) {
   context.addInitializer(function (this: any) {
@@ -48,10 +48,43 @@ function autobind(
   // }
 }
 
+// Now I'll do a decorator for a field, also called property.
+// the target in this case needs to be undefined because the decorator will always
+// run before the property gets initialized.
+function addTireckToField(
+  target: undefined,
+  context: ClassFieldDecoratorContext,
+) {
+  console.log(target); // Undefined
+  console.log(context);
+
+  // Like always, I can return a new value for that field, after or before doing
+  // something with it's value.
+  return (initialValue: any) => {
+    console.log(initialValue);
+    return `${initialValue} Tireck`;
+  };
+}
+
+// Now imagine you want to pass dynamic values to the decorator in it's pointer (@)
+// The way to do that is to wrap the decorator function inside another function,
+// and use that to pass a parameter.
+function addAfterField(stringToAdd: string) {
+  return function addAfterFieldDecorator(
+    target: undefined,
+    context: ClassFieldDecoratorContext,
+  ) {
+    return (initialValue: any) => {
+      return `${initialValue} ${stringToAdd}`;
+    };
+  };
+}
+
 //  To attach a decorator to a target, use the @ symbol without calling the function, There's a way to
 //  pass arguments to this decorator function that I will explore later.
 @logger
 class Person {
+  @addAfterField("Tireck")
   name = "Leo";
 
   @autobind

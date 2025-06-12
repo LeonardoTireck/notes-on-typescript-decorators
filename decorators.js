@@ -81,12 +81,47 @@ function logger(target, context) {
 }
 // Now let's try the same with a decorator for a method:
 // The goal is to create a decorator that will bind the context of the instance to the method.
-function autobind(_target, context) {
+function autobind(target, context) {
     context.addInitializer(function () {
         this[context.name] = this[context.name].bind(this);
     });
+    // We can also return a new function here, that will replace the original function.
+    // This is really powerful because not only you can change the original method,
+    // you can add a new behavior after/before the method is called, like writing something
+    // to a file, making an http request and so on...
+    // And because the target refers to the unchanged version of the function, the binding we did
+    // previously will not work because it refers to the context, which happens after.
+    // The workaround is to use the apply() method after the target. It will open a window to pass a context
+    // to the function being called before actually calling it.
+    // return function (this: any) {
+    // console.log('Executing original function')
+    // target.apply(this);
+    // }
 }
-//  To attach a decorator to a target, use the @ simbol without calling the function, There's a way to
+// Now I'll do a decorator for a field, also called property.
+// the target in this case needs to be undefined because the decorator will always
+// run before the property gets initialized.
+function addTireckToField(target, context) {
+    console.log(target); // Undefined
+    console.log(context);
+    // Like always, I can return a new value for that field, after or before doing
+    // something with it's value.
+    return function (initialValue) {
+        console.log(initialValue);
+        return "".concat(initialValue, " Tireck");
+    };
+}
+// Now imagine you want to pass dynamic values to the decorator in it's pointer (@)
+// The way to do that is to wrap the decorator function inside another function,
+// and use that to pass a parameter.
+function addAfterField(stringToAdd) {
+    return function addAfterFieldDecorator(target, context) {
+        return function (initialValue) {
+            return "".concat(initialValue, " ").concat(stringToAdd);
+        };
+    };
+}
+//  To attach a decorator to a target, use the @ symbol without calling the function, There's a way to
 //  pass arguments to this decorator function that I will explore later.
 var Person = function () {
     var _classDecorators = [logger];
@@ -94,10 +129,14 @@ var Person = function () {
     var _classExtraInitializers = [];
     var _classThis;
     var _instanceExtraInitializers = [];
+    var _name_decorators;
+    var _name_initializers = [];
+    var _name_extraInitializers = [];
     var _greet_decorators;
     var Person = _classThis = /** @class */ (function () {
         function Person_1() {
-            this.name = (__runInitializers(this, _instanceExtraInitializers), "Leo");
+            this.name = (__runInitializers(this, _instanceExtraInitializers), __runInitializers(this, _name_initializers, "Leo"));
+            __runInitializers(this, _name_extraInitializers);
         }
         Person_1.prototype.greet = function () {
             console.log("Hi my name is ".concat(this.name));
@@ -107,8 +146,10 @@ var Person = function () {
     __setFunctionName(_classThis, "Person");
     (function () {
         var _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
+        _name_decorators = [addAfterField("Tireck")];
         _greet_decorators = [autobind];
         __esDecorate(_classThis, null, _greet_decorators, { kind: "method", name: "greet", static: false, private: false, access: { has: function (obj) { return "greet" in obj; }, get: function (obj) { return obj.greet; } }, metadata: _metadata }, null, _instanceExtraInitializers);
+        __esDecorate(null, null, _name_decorators, { kind: "field", name: "name", static: false, private: false, access: { has: function (obj) { return "name" in obj; }, get: function (obj) { return obj.name; }, set: function (obj, value) { obj.name = value; } }, metadata: _metadata }, _name_initializers, _name_extraInitializers);
         __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
         Person = _classThis = _classDescriptor.value;
         if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
