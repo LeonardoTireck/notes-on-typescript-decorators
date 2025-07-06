@@ -70,10 +70,7 @@ function addTireckToField(
 // The way to do that is to wrap the decorator function inside another function,
 // and use that to pass a parameter.
 function addAfterField<T>(stringToAdd: T) {
-  return function addAfterFieldDecorator(
-    target: undefined,
-    context: ClassFieldDecoratorContext,
-  ) {
+  return function (target: undefined, context: ClassFieldDecoratorContext) {
     return (initialValue: any) => {
       return `${initialValue} ${stringToAdd}`;
     };
